@@ -72,10 +72,11 @@ public class RestAPIController {
     }
 
     @GetMapping("/api/orderNumber/{id}")
-    public Iterable<OrderNumber> getOrderNumber(@PathVariable("id") Long id){
-        ArrayList<Long> ids = new ArrayList<Long>();
-        ids.add(id);
-        return orderNumberService.getOrderNumber(ids);
+    public OrderNumber getOrderNumber(@PathVariable("id") Long id){
+    // public Iterable<OrderNumber> getOrderNumber(@PathVariable("id") Long id){
+        // ArrayList<Long> ids = new ArrayList<Long>();
+        // ids.add(id);
+        return orderNumberService.getOrderNumber(id);
     }
 
     @GetMapping("/api/orders/")
@@ -89,4 +90,9 @@ public class RestAPIController {
         return orderService.setOrder(orderRequest);
     }
 
+    @DeleteMapping("/api/orders/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOrder(@PathVariable("id") Long id){
+        orderService.cancelOrder(id);
+    }
 }

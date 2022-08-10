@@ -29,7 +29,7 @@ public class OrderResponse {
     private String mail;
     private String phone;
     private String orderDate;
-    private String payMehtod;
+    private String payMethod;
     private String payStatus;
     private String passMethod;
     private String passStatus;

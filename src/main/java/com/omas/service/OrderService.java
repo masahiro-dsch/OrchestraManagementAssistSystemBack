@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.TimeZone;
 
 import org.springframework.stereotype.Service;
 
@@ -38,10 +39,11 @@ public class OrderService {
             res.setConcertID(order.getConcertId());
             res.setConcertName(concertRepository.findById(order.getConcertId()).get().getTitle());
             res.setOrderDetail(new ArrayList<HashMap<String, String>>());
-            Iterator<OrderDetail> orderDetailIterator = orderDetailRepository.findByOrderId(order.getId()).iterator();
+            Iterator<OrderDetail> orderDetailIterator = orderDetailRepository.findAllByOrderId(order.getId()).iterator();
             while(orderDetailIterator.hasNext()){
                 OrderDetail orderDetail = orderDetailIterator.next();
                 HashMap<String, String> detail = new HashMap<String, String>();
+                detail.put("orderId", orderDetail.getOrderId().toString());
                 detail.put("floor", orderDetail.getFloor());
                 detail.put("column", orderDetail.getColumn());
                 detail.put("number", orderDetail.getNumber());
@@ -56,7 +58,7 @@ public class OrderService {
             res.setMail(order.getMail());
             res.setPhone(order.getPhone());
             res.setOrderDate(order.getOrderDate().toString());
-            res.setPayMehtod(order.getPayMethod());
+            res.setPayMethod(order.getPayMethod());
             res.setPayStatus(order.getPayStatus());
             res.setPassMethod(order.getPassMethod());
             res.setPassStatus(order.getPassStatus());
@@ -75,22 +77,25 @@ public class OrderService {
         newOrder.setAddress(orderRequest.getAddress());
         newOrder.setMail(orderRequest.getMail());
         newOrder.setPhone(orderRequest.getPhone());
-        SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        // SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
         try{
             newOrder.setOrderDate(df.parse(orderRequest.getOrderDate()));
         } catch(Exception e) {
             System.out.println(e);
         };
-        newOrder.setPayMethod(orderRequest.getPayMehtod());
+        newOrder.setPayMethod(orderRequest.getPayMethod());
         newOrder.setPayStatus(orderRequest.getPayStatus());
         newOrder.setPassMethod(orderRequest.getPassMethod());
         newOrder.setPassStatus(orderRequest.getPassStatus());
-        orderRepository.save(newOrder);
+        Order savedOrder = orderRepository.save(newOrder);
 
         Iterator<HashMap<String,String>> detailIterator = orderRequest.getOrderDetail().iterator();
         while(detailIterator.hasNext()){
             HashMap<String, String> reqDetail = detailIterator.next();
             OrderDetail newDetail = new OrderDetail();
+            newDetail.setOrderId(savedOrder.getId());
             newDetail.setFloor(reqDetail.get("floor"));
             newDetail.setColumn(reqDetail.get("column"));
             newDetail.setNumber(reqDetail.get("number"));
@@ -99,6 +104,14 @@ public class OrderService {
         }
 
         return orderRequest;
+    }
 
+    public void cancelOrder(Long id){
+        orderRepository.deleteById(id);
+        Iterator<OrderDetail> orderDetailIterator = orderDetailRepository.findAllByOrderId(id).iterator();
+        while(orderDetailIterator.hasNext()){
+            OrderDetail cancelDetail = orderDetailIterator.next();
+            orderDetailRepository.deleteById(cancelDetail.getId());
+        }
     }
 }
